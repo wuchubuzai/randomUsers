@@ -1,1 +1,12 @@
-Simple little piece of code that creates random user data in Apache Cassandra.
+
+Simple little piece of code that creates random user data in Apache Cassandra.  Purpose being able to populate random data in a Cassandra cluster
+to enable tests to be run for various different exercises.      
+
+    Tested with: 
+    
+    Apache Cassandra 1.0.7 http://cassandra.apache.org/ [ Windows ]
+
+    java version "1.7.0"
+    Java(TM) SE Runtime Environment (build 1.7.0-b147)
+    Java HotSpot(TM) 64-Bit Server VM (build 21.0-b17, mixed mode)
+    

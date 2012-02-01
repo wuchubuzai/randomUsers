@@ -2,6 +2,7 @@ package com.wuchubuzai.random;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import me.prettyprint.hector.api.Cluster;
 import me.prettyprint.hector.api.ddl.ColumnFamilyDefinition;
@@ -33,10 +34,11 @@ public class GenerateUsers {
 	final static int NUM_THREADS = 100;
 	
 	static Cluster cluster;
+	static Random generator = new Random();
 	
 	
 	public static void main(String[] args) {
-		
+
 		// connect to Cassandra
 		try {
 			cluster = HFactory.getOrCreateCluster(CLUSTER_NAME,HOST_IP);
@@ -47,6 +49,8 @@ public class GenerateUsers {
 			} else { 
 				log.info("keyspace: " + KEYSPACE + " exists");
 			}
+			
+			
 			
 			KeyspaceDefinition keyspaceDef = cluster.describeKeyspace(KEYSPACE);
 			boolean cfExists = false;

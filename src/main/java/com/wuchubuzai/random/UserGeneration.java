@@ -3,10 +3,12 @@ package com.wuchubuzai.random;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Random;
 import java.util.UUID;
 
 import me.prettyprint.cassandra.serializers.IntegerSerializer;
@@ -38,8 +40,7 @@ public class UserGeneration implements Runnable {
 	private static ObjectMapper mapper = new ObjectMapper();
 	private final int NUM_USERS;
 	private final Map<String, int[]> userOptions = new HashMap<String, int[]>();
-	Random generator = new Random();
-
+	static final SimpleDateFormat ISO8601FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 
 	UserGeneration(int numUsers) { 
 		this.NUM_USERS = numUsers;
@@ -78,28 +79,53 @@ public class UserGeneration implements Runnable {
 			for (Entry<String, int[]> option : this.userOptions.entrySet()) {
 				
 				// select a random option
-				int val = option.getValue()[generator.nextInt(option.getValue().length)];
+				int val = option.getValue()[GenerateUsers.generator.nextInt(option.getValue().length)];
 				
 				// if the option value is greater than 0, add it
 				if (val > 0) m.addInsertion(uid.toString(), GenerateUsers.USER_CF, HFactory.createColumn(option.getKey(), val, ss, is));
 				
 				// select another random option to populate browse criteria
-				int bcVal = option.getValue()[generator.nextInt(option.getValue().length)];
+				int bcVal = option.getValue()[GenerateUsers.generator.nextInt(option.getValue().length)];
 				
 				// if the option value is greater than 0, add it
 				if (bcVal > 0) bc.put(option.getKey(), bcVal);
 			}
-						
 			
-			try {
-				Writer sw = new StringWriter();
+			// generate some geo-location data so that we can test out haversine 
+			
+			double minLat = -90;
+			double maxLat = 90;
+			double latitude = minLat + (double)(Math.random() * ((maxLat - minLat) + 1));
 
+			double minLon = 0;
+			double maxLon = 180;			
+			double longitude = minLon + (double)(Math.random() * ((maxLon - minLon) + 1));
+			
+			DecimalFormat df = new DecimalFormat("#.#####");		
+			Map<String, String> coords = new HashMap<String,String>();
+			coords.put("latitude", df.format(latitude).toString());
+			coords.put("longitude", df.format(longitude).toString());
+	        Date now = new Date();
+			coords.put("date", ISO8601FORMAT.format(now));
+
+			try {
+				
+				Writer lw = new StringWriter();
+				// convert the coordinate entry into a JSON string
+				mapper.writeValue(lw, coords);
+				m.addInsertion(uid.toString(), GenerateUsers.USER_CF, HFactory.createColumn("location", lw.toString(), ss, ss));
+				
+				
+				Writer sw = new StringWriter();
 				// convert the browse criteria into a JSON string
 				mapper.writeValue(sw, bc);
 				m.addInsertion(GenerateUsers.USER_ROW_KEY, GenerateUsers.USER_CF, HFactory.createColumn("browse_criteria", sw.toString(), ss, ss));	
 				
 				// for information purposes, print out the 50th user's browse criteria
-				if (i == 50 && log.isInfoEnabled()) log.info(uid.toString() + " browse criteria: " + sw.toString()); 
+				if (i == 50 && log.isInfoEnabled()) {
+					log.info(uid.toString() + " browse criteria: " + sw.toString());
+					log.info(uid.toString() + " coordinates: " + lw.toString());
+				}
 				
 			} catch (JsonGenerationException e) {
 				e.printStackTrace();
