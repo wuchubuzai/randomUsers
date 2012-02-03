@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -78,18 +77,23 @@ public class UserGeneration implements Runnable {
 				m.addInsertion(GenerateUsers.getUserRowKey(), GenerateUsers.getUserCf(), HFactory.createColumn(user.get("id").toString(), System.nanoTime(), ss, ls));
 				m.addInsertion(user.get("id").toString(), GenerateUsers.getUserCf(), HFactory.createColumn("id", user.get("id").toString(), ss, ss));
 				for (Map.Entry<String, Object> col : user.entrySet()) {
-					log.info(col.getValue().getClass().toString());
-					if (col.getValue().getClass().equals("java.util.HashMap")) { 
+					if (col.getValue().getClass().toString().equals("class java.util.HashMap")) { 
 						@SuppressWarnings("unchecked")
 						HashMap<String, Object> userInfo = (HashMap<String, Object>) col.getValue();
 						m.addInsertion(user.get("id").toString(), GenerateUsers.getUserCf(), HFactory.createColumn(col.getKey(), transformFieldToJson(userInfo).toString(), ss, ss));
-					} else if (col.getValue().getClass().equals("java.util.String")) { 
+					} else if (col.getValue().getClass().toString().equals("class java.util.String")) { 
 						m.addInsertion(user.get("id").toString(), GenerateUsers.getUserCf(), HFactory.createColumn(col.getKey(), col.getValue().toString(), ss, ss));
-					} else if (col.getValue().getClass().equals("java.util.Integer")) { 
+					} else if (col.getValue().getClass().toString().equals("class java.util.Integer")) { 
 						m.addInsertion(user.get("id").toString(), GenerateUsers.getUserCf(), HFactory.createColumn(col.getKey(), Integer.parseInt(col.getValue().toString()), ss, is));
 					}
+					
+			        if (i  == GenerateUsers.generator.nextInt(NUM_USERS) && log.isDebugEnabled()) { 
+			        	log.debug("loading random user " + i + " " + transformFieldToJson(user).toString());
+			        }						
 				}		
 			}
+			
+		
 			
 			// insert all user records
 			m.execute();
@@ -167,10 +171,10 @@ public class UserGeneration implements Runnable {
 		coords.put("longitude", df.format(longitude).toString());
         Date now = new Date();
 		coords.put("date", ISO8601FORMAT.format(now));
-		user.put("location", transformFieldToJson(coords).toString());	
+		user.put("location", coords);	
 
 		// save the browse criteria
-		user.put("browse_criteria", transformFieldToJson(bc).toString());
+		user.put("browse_criteria", bc);
 			
 		return user;
 	}

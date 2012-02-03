@@ -25,7 +25,7 @@ public class GenerateUsers {
 
 	static final Logger log = LoggerFactory.getLogger(GenerateUsers.class);
 	
-	// configure these as you like.
+	// override via properties file:  GenerateUsers.properties
 	static String keyspace  = "random";
 	static String userRowKey = "users";
 	static String userCf = "user";
@@ -72,18 +72,43 @@ public class GenerateUsers {
 				} else { 
 					if (properties.containsKey(overrides[i])) { 
 						if (log.isInfoEnabled()) log.info(overrides[i] + " external property defined");
-						if (overrides[i].equals("keyspace")) setKeyspace(properties.getProperty(overrides[i]));
-						if (overrides[i].equals("userRowKey")) setKeyspace(properties.getProperty(overrides[i]));
-						if (overrides[i].equals("userCf")) setKeyspace(properties.getProperty(overrides[i]));
-						if (overrides[i].equals("hostIp")) setKeyspace(properties.getProperty(overrides[i]));
-						if (overrides[i].equals("clusterName")) setKeyspace(properties.getProperty(overrides[i]));
-						if (overrides[i].equals("numUsers")) setKeyspace(properties.getProperty(overrides[i]));
-						if (overrides[i].equals("numThreads")) setKeyspace(properties.getProperty(overrides[i]));
+						if (overrides[i].equals("keyspace")) {
+							if (log.isInfoEnabled()) log.info("override keyspace: " + properties.getProperty(overrides[i]));
+							setKeyspace(properties.getProperty(overrides[i]));
+						}
+						
+						if (overrides[i].equals("userRowKey")) {
+							if (log.isInfoEnabled()) log.info("override userRowKey: " + properties.getProperty(overrides[i]));
+							setUserRowKey(properties.getProperty(overrides[i]));
+						}
+						
+						if (overrides[i].equals("userCf")) {
+							if (log.isInfoEnabled()) log.info("override userCf: " + properties.getProperty(overrides[i]));
+							setUserCf(properties.getProperty(overrides[i]));
+						}
+						
+						if (overrides[i].equals("hostIp")) {
+							if (log.isInfoEnabled()) log.info("override hostIp: " + properties.getProperty(overrides[i]));
+							setHostIp(properties.getProperty(overrides[i]));
+						}
+						
+						if (overrides[i].equals("clusterName")) {
+							if (log.isInfoEnabled()) log.info("override clusterName: " + properties.getProperty(overrides[i]));
+							setClusterName(properties.getProperty(overrides[i]));
+						}
+						
+						if (overrides[i].equals("numUsers")) {
+							if (log.isInfoEnabled()) log.info("override numUsers: " + properties.getProperty(overrides[i]));
+							setNumUsers(Integer.parseInt(properties.getProperty(overrides[i])));
+						}
+						
+						if (overrides[i].equals("numThreads")) {
+							if (log.isInfoEnabled()) log.info("override numThreads: " + properties.getProperty(overrides[i]));
+							setNumThreads(Integer.parseInt(properties.getProperty(overrides[i])));
+						}
 					}
 				}
 			}
-		} else { 
-			if (log.isInfoEnabled()) log.info("properties file not detected");
 		}
 		
 		if (!isSingleTest()) { 
