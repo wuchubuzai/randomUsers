@@ -81,19 +81,18 @@ public class UserGeneration implements Runnable {
 						@SuppressWarnings("unchecked")
 						HashMap<String, Object> userInfo = (HashMap<String, Object>) col.getValue();
 						m.addInsertion(user.get("id").toString(), GenerateUsers.getUserCf(), HFactory.createColumn(col.getKey(), transformFieldToJson(userInfo).toString(), ss, ss));
-					} else if (col.getValue().getClass().toString().equals("class java.util.String")) { 
+					} else if (col.getValue().getClass().toString().equals("class java.lang.String")) { 
 						m.addInsertion(user.get("id").toString(), GenerateUsers.getUserCf(), HFactory.createColumn(col.getKey(), col.getValue().toString(), ss, ss));
-					} else if (col.getValue().getClass().toString().equals("class java.util.Integer")) { 
+					} else if (col.getValue().getClass().toString().equals("class java.lang.Integer")) { 
 						m.addInsertion(user.get("id").toString(), GenerateUsers.getUserCf(), HFactory.createColumn(col.getKey(), Integer.parseInt(col.getValue().toString()), ss, is));
 					}
 					
 			        if (i  == GenerateUsers.generator.nextInt(NUM_USERS) && log.isDebugEnabled()) { 
 			        	log.debug("loading random user " + i + " " + transformFieldToJson(user).toString());
 			        }						
-				}		
+				}	
+				
 			}
-			
-		
 			
 			// insert all user records
 			m.execute();
