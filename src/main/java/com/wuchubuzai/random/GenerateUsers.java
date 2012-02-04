@@ -1,17 +1,25 @@
 package com.wuchubuzai.random;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 import java.util.Random;
 
+import me.prettyprint.cassandra.serializers.LongSerializer;
+import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.hector.api.Cluster;
 import me.prettyprint.hector.api.ddl.ColumnFamilyDefinition;
 import me.prettyprint.hector.api.ddl.KeyspaceDefinition;
 import me.prettyprint.hector.api.exceptions.HectorException;
 import me.prettyprint.hector.api.factory.HFactory;
+import me.prettyprint.hector.api.mutation.Mutator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +48,8 @@ public class GenerateUsers {
 	static Random generator = new Random();
 	
 	static boolean singleTest = false;
-	
+	static HashMap<Integer, String> firstNames = new HashMap<Integer, String>();
+	static HashMap<Integer, String> lastNames = new HashMap<Integer, String>();
 	
 	public static void main(String[] args) {
 
@@ -111,6 +120,27 @@ public class GenerateUsers {
 			}
 		}
 		
+		
+		try {
+			// load the csv to get the first names and last names
+			File file = new File("etc/randomNames.csv");			
+			BufferedReader br = new BufferedReader(new FileReader(file));
+			String line = null;
+			int i = 0;
+			while ((line = br.readLine()) != null) {
+				String tokens[] = line.split(",");
+				firstNames.put(i, tokens[0]);
+				lastNames.put(i, tokens[1]);				
+				i++;
+			}
+		} catch (FileNotFoundException e) {
+			log.error(e.getMessage());
+			System.exit(-1);
+		} catch (IOException e) {
+			log.error(e.getMessage());
+			System.exit(-1);
+		}
+		
 		if (!isSingleTest()) { 
 			// connect to Cassandra
 			try {
@@ -129,7 +159,21 @@ public class GenerateUsers {
 					if (cfDef.getName().equals(getUserCf())) cfExists = true;
 				}
 			
-				if (!cfExists) cluster.addColumnFamily(HFactory.createColumnFamilyDefinition(getKeyspace(), getUserCf()));
+				if (!cfExists) { 
+					
+					// create the new column family
+					cluster.addColumnFamily(HFactory.createColumnFamilyDefinition(getKeyspace(), getUserCf()));
+
+					// this populates a specific row with column names that we can pull a dynamic list (based on this row) to determine which columns need pulling
+					String[] userCols = { "gender", "seeking_gender", "ethnicity", "hair", "eyes", "sexuality", "income", "lifestyle", "living", "relationship", "bodytype", "children", "drinking", "smoking", "education", "exercise", "year", "day", "month", "age", "location", "browse_criteria", "online", "default_photo", "fullname"};
+					StringSerializer ss = new StringSerializer();
+					LongSerializer ls = new LongSerializer();
+					Mutator<String> m = HFactory.createMutator(HFactory.createKeyspace(GenerateUsers.getKeyspace(), cluster), ss);
+					for (int j = 0; j < userCols.length; j++) {
+						m.addInsertion("user_cols", getUserCf(), HFactory.createColumn(userCols[j], System.nanoTime(), ss, ls));
+					}
+					m.execute();
+				}
 				
 			} catch (HectorException he) { 
 				log.error(he.getMessage());
@@ -231,5 +275,17 @@ public class GenerateUsers {
 	public static void setSingleTest(boolean singleTest) {
 		GenerateUsers.singleTest = singleTest;
 	}
+
+
+	public static HashMap<Integer, String> getFirstNames() {
+		return firstNames;
+	}
+
+
+	public static HashMap<Integer, String> getLastNames() {
+		return lastNames;
+	}
+	
+	
 	
 }

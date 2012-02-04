@@ -44,23 +44,25 @@ public class UserGeneration implements Runnable {
 
 	UserGeneration(int numUsers) { 
 		this.NUM_USERS = numUsers;
-		userOptions.put("gender", new int[] { 1,2 });
-		userOptions.put("seeking_gender", new int[] { 0,1,2 });
-		userOptions.put("ethnicity", new int[] { 0,1,2,3,4,5 });
-		userOptions.put("hair", new int[] { 0,1,2,3,4,5 });
-		userOptions.put("eyes", new int[] { 0,1,2,3,4,5 });
-		userOptions.put("sexuality", new int[] { 0,1,2,3,4,5 });
-		userOptions.put("income", new int[] { 0,1,2,3,4,5 });
-		userOptions.put("lifestyle", new int[] { 0,1,2,3,4,5 });
-		userOptions.put("living", new int[] { 0,1,2,3,4,5 });
-		userOptions.put("relationship", new int[] { 0,1,2,3,4,5 });
-		userOptions.put("bodytype", new int[] { 0,1,2,3,4,5 });
-		userOptions.put("children", new int[] { 0,1,2,3,4,5 });
-		userOptions.put("drinking", new int[] { 0,1,2,3,4,5 });
-		userOptions.put("smoking", new int[] { 0,1,2,3,4,5 });
-		userOptions.put("education", new int[] { 0,1,2,3,4,5 });
-		userOptions.put("exercise", new int[] { 0,1,2,3,4,5 });
-		userOptions.put("year", new int[] { 1910, 1984 } );
+		userOptions.put("gender", new int[] { 1,2 }); // male or female
+		userOptions.put("seeking_gender", new int[] { 0,1,2 }); // no preference, male, female
+		userOptions.put("ethnicity", new int[] { 0,1,2,3,4,5 }); // random "options"
+		userOptions.put("hair", new int[] { 0,1,2,3,4,5 }); // random "options"
+		userOptions.put("eyes", new int[] { 0,1,2,3,4,5 }); // random "options"
+		userOptions.put("sexuality", new int[] { 0,1,2,3,4,5 }); // random "options"
+		userOptions.put("income", new int[] { 0,1,2,3,4,5 }); // random "options"
+		userOptions.put("lifestyle", new int[] { 0,1,2,3,4,5 }); // random "options"
+		userOptions.put("living", new int[] { 0,1,2,3,4,5 }); // random "options"
+		userOptions.put("relationship", new int[] { 0,1,2,3,4,5 }); // random "options"
+		userOptions.put("bodytype", new int[] { 0,1,2,3,4,5 }); // random "options"
+		userOptions.put("children", new int[] { 0,1,2,3,4,5 }); // random "options"
+		userOptions.put("drinking", new int[] { 0,1,2,3,4,5 }); // random "options"
+		userOptions.put("smoking", new int[] { 0,1,2,3,4,5 }); // random "options"
+		userOptions.put("education", new int[] { 0,1,2,3,4,5 }); // random "options"
+		userOptions.put("exercise", new int[] { 0,1,2,3,4,5 }); // random "options"
+		userOptions.put("year", new int[] { 1910, 1984 } ); // used to specify the year of birth for a user
+		userOptions.put("online", new int[] { 0, 1 } ); // 1 if the user is online
+		userOptions.put("default_photo", new int[] { 0, 1 } ); // 0 if no photo, 1 if custom photo
 	}
 	
 	public void run() {
@@ -145,7 +147,17 @@ public class UserGeneration implements Runnable {
 				int val = option.getValue()[GenerateUsers.generator.nextInt(option.getValue().length)];
 				
 				// if the option value is greater than 0, add it
-				if (val > 0) user.put(option.getKey(), val); 
+				if (val > 0) { 
+					if (option.getKey().equals("default_photo")) { 
+						user.put(option.getKey(), "non-default photo");
+					} else { 
+						user.put(option.getKey(), val);
+					}
+				} else { 
+					if (option.getKey().equals("default_photo")) { 
+						user.put(option.getKey(), "default"); 
+					}
+				}
 				
 				// select another random option to populate browse criteria
 				int bcVal = option.getValue()[GenerateUsers.generator.nextInt(option.getValue().length)];
@@ -154,6 +166,9 @@ public class UserGeneration implements Runnable {
 				if (bcVal > 0) bc.put(option.getKey(), bcVal);
 			}
 		}
+		
+		// generate a random name for this user
+		user.put("fullname", GenerateUsers.getFirstNames().get(GenerateUsers.generator.nextInt(GenerateUsers.getFirstNames().size())) + " " + GenerateUsers.getLastNames().get(GenerateUsers.generator.nextInt(GenerateUsers.getLastNames().size())));
 		
 		// generate some geo-location data so that we can test out haversine 
 		double minLat = -90;
