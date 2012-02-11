@@ -63,6 +63,9 @@ public class UserGeneration implements Runnable {
 		userOptions.put("year", new int[] { 1910, 1984 } ); // used to specify the year of birth for a user
 		userOptions.put("online", new int[] { 0, 1 } ); // 1 if the user is online
 		userOptions.put("default_photo", new int[] { 0, 1 } ); // 0 if no photo, 1 if custom photo
+		userOptions.put("proximity", new int[] { 0, 10, 50, 100, 500, 1000 } );
+		userOptions.put("height", new int[] { 135,  210 } );
+		userOptions.put("weight", new int[] { 39,  205 } );
 	}
 	
 	public void run() {
@@ -73,9 +76,11 @@ public class UserGeneration implements Runnable {
 			
 			long startTime = System.nanoTime();
 			Mutator<String> m = HFactory.createMutator(ksp, ss);
+			
+			int createdUsers = 0;
+			
 			for (int i = 0; i < NUM_USERS; i++) {
 				Map<String, Object> user = generateUser();
-
 				m.addInsertion(GenerateUsers.getUserRowKey(), GenerateUsers.getUserCf(), HFactory.createColumn(user.get("id").toString(), System.nanoTime(), ss, ls));
 				m.addInsertion(user.get("id").toString(), GenerateUsers.getUserCf(), HFactory.createColumn("id", user.get("id").toString(), ss, ss));
 				for (Map.Entry<String, Object> col : user.entrySet()) {
@@ -93,6 +98,13 @@ public class UserGeneration implements Runnable {
 			        	log.debug("loading random user " + i + " " + transformFieldToJson(user).toString());
 			        }						
 				}	
+				// write out 20 users at a time 
+				if (createdUsers == 20) { 
+					m.execute();
+					createdUsers = 0;
+				} else { 
+					createdUsers++;
+				}
 				
 			}
 			
@@ -143,27 +155,36 @@ public class UserGeneration implements Runnable {
 				user.put("age", now.get(GregorianCalendar.YEAR) - then.get(GregorianCalendar.YEAR));
 			       
 			} else { 
-				// select a random option
-				int val = option.getValue()[GenerateUsers.generator.nextInt(option.getValue().length)];
 				
-				// if the option value is greater than 0, add it
-				if (val > 0) { 
-					if (option.getKey().equals("default_photo")) { 
-						user.put(option.getKey(), "non-default photo");
+				if (!option.getKey().equals("height") && !option.getKey().equals("weight")) { 
+					// select a random option
+					int val = option.getValue()[GenerateUsers.generator.nextInt(option.getValue().length)];
+					
+					// if the option value is greater than 0, add it
+					if (val > 0) { 
+						if (option.getKey().equals("default_photo")) { 
+							user.put(option.getKey(), "non-default photo");
+						} else if (option.getKey().equals("proximity")) { 
+							 // only used for browse criteria -- 
+						} else { 
+							user.put(option.getKey(), val);
+						}
 					} else { 
-						user.put(option.getKey(), val);
+						if (option.getKey().equals("default_photo")) { 
+							user.put(option.getKey(), "default"); 
+						}
 					}
+					
+					// select another random option to populate browse criteria
+					int bcVal = option.getValue()[GenerateUsers.generator.nextInt(option.getValue().length)];
+					
+					// if the option value is greater than 0, add it
+					if (bcVal > 0) bc.put(option.getKey(), bcVal);
 				} else { 
-					if (option.getKey().equals("default_photo")) { 
-						user.put(option.getKey(), "default"); 
-					}
+					// generate user height & weight
+					int val = option.getValue()[0] + (int)(Math.random() * ((option.getValue()[1] - option.getValue()[0]) + 1));
+					user.put(option.getKey(), val);
 				}
-				
-				// select another random option to populate browse criteria
-				int bcVal = option.getValue()[GenerateUsers.generator.nextInt(option.getValue().length)];
-				
-				// if the option value is greater than 0, add it
-				if (bcVal > 0) bc.put(option.getKey(), bcVal);
 			}
 		}
 		
@@ -171,12 +192,12 @@ public class UserGeneration implements Runnable {
 		user.put("fullname", GenerateUsers.getFirstNames().get(GenerateUsers.generator.nextInt(GenerateUsers.getFirstNames().size())) + " " + GenerateUsers.getLastNames().get(GenerateUsers.generator.nextInt(GenerateUsers.getLastNames().size())));
 		
 		// generate some geo-location data so that we can test out haversine 
-		double minLat = -90;
-		double maxLat = 90;
+		double minLat = -90.00000;
+		double maxLat = 90.00000;
 		double latitude = minLat + (double)(Math.random() * ((maxLat - minLat) + 1));
 
-		double minLon = 0;
-		double maxLon = 180;			
+		double minLon = 0.00000;
+		double maxLon = 180.00000;
 		double longitude = minLon + (double)(Math.random() * ((maxLon - minLon) + 1));
 		
 		DecimalFormat df = new DecimalFormat("#.#####");		

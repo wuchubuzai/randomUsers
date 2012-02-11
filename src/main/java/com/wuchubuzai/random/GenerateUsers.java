@@ -41,7 +41,7 @@ public class GenerateUsers {
 	static String clusterName = "cluster";
 	
 	// create 25,000 user entries
-	static int numUsers = 250;
+	static int numUsers = 1000;
 	static int numThreads = 100;
 	
 	static Cluster cluster;
@@ -165,7 +165,7 @@ public class GenerateUsers {
 					cluster.addColumnFamily(HFactory.createColumnFamilyDefinition(getKeyspace(), getUserCf()));
 
 					// this populates a specific row with column names that we can pull a dynamic list (based on this row) to determine which columns need pulling
-					String[] userCols = { "gender", "seeking_gender", "ethnicity", "hair", "eyes", "sexuality", "income", "lifestyle", "living", "relationship", "bodytype", "children", "drinking", "smoking", "education", "exercise", "year", "day", "month", "age", "location", "browse_criteria", "online", "default_photo", "fullname"};
+					String[] userCols = { "gender", "seeking_gender", "ethnicity", "hair", "eyes", "sexuality", "height", "weight", "income", "lifestyle", "living", "relationship", "bodytype", "children", "drinking", "smoking", "education", "exercise", "year", "day", "month", "age", "location", "browse_criteria", "online", "default_photo", "fullname"};
 					StringSerializer ss = new StringSerializer();
 					LongSerializer ls = new LongSerializer();
 					Mutator<String> m = HFactory.createMutator(HFactory.createKeyspace(GenerateUsers.getKeyspace(), cluster), ss);
