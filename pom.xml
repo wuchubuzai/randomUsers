@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.wuchubuzai</groupId>
 	<artifactId>random</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<organization>
 		<name>Wuchubuzai</name>
 		<url>http://www.wuchubuzai.com/</url>
@@ -32,4 +32,12 @@
 			<version>1.9.4</version>
 		</dependency>
 	</dependencies>
+	<url>https://github.com/wuchubuzai/randomUsers</url>
+	<issueManagement>
+		<system>Redmine</system>
+		<url>https://project.wuchubuzai.com/</url>
+	</issueManagement>
+	<ciManagement>
+		<system>Jenkins</system>
+	</ciManagement>
 </project>
