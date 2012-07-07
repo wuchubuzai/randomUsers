@@ -38,12 +38,12 @@ public class UserGeneration implements Runnable {
 	private static final IntegerSerializer INTEGER_SERIALIZER = new IntegerSerializer();
 	private static final LongSerializer LONG_SERIALIZER = new LongSerializer();
 	private static ObjectMapper mapper = new ObjectMapper();
-	private int NUM_USERS;
+	private int numberOfUsers;
 	private Map<String, int[]> userOptions = new HashMap<String, int[]>();
 	static final SimpleDateFormat ISO8601FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 
 	UserGeneration(int numUsers) { 
-		this.NUM_USERS = numUsers;
+		this.numberOfUsers = numUsers;
 		userOptions.put("gender", new int[] { 1,2 }); // male or female
 		userOptions.put("seeking_gender", new int[] { 0,1,2 }); // no preference, male, female
 		userOptions.put("ethnicity", new int[] { 0,1,2,3,4,5 }); // random "options"
@@ -79,7 +79,7 @@ public class UserGeneration implements Runnable {
 			
 			int createdUsers = 0;
 			
-			for (int i = 0; i < NUM_USERS; i++) {
+			for (int i = 0; i < numberOfUsers; i++) {
 				Map<String, Object> user = generateUser();
 				m.addInsertion(GenerateUsers.getUserRowKey(), GenerateUsers.getUserCf(), HFactory.createColumn(user.get(RandomUserConstants.ID_KEY).toString(), System.nanoTime(), STRING_SERIALIZER, LONG_SERIALIZER));
 				m.addInsertion(user.get(RandomUserConstants.ID_KEY).toString(), GenerateUsers.getUserCf(), HFactory.createColumn(RandomUserConstants.ID_KEY, user.get(RandomUserConstants.ID_KEY).toString(), STRING_SERIALIZER, STRING_SERIALIZER));
@@ -94,7 +94,7 @@ public class UserGeneration implements Runnable {
 						m.addInsertion(user.get(RandomUserConstants.ID_KEY).toString(), GenerateUsers.getUserCf(), HFactory.createColumn(col.getKey(), Integer.parseInt(col.getValue().toString()), STRING_SERIALIZER, INTEGER_SERIALIZER));
 					}
 					
-			        if (i  == GenerateUsers.getGenerator().nextInt(NUM_USERS) && LOG.isDebugEnabled()) { 
+			        if (i  == GenerateUsers.getGenerator().nextInt(numberOfUsers) && LOG.isDebugEnabled()) { 
 			        	LOG.debug("loading random user " + i + " " + transformFieldToJson(user).toString());
 			        }						
 				}	
@@ -185,7 +185,9 @@ public class UserGeneration implements Runnable {
 					int bcVal = option.getValue()[GenerateUsers.getGenerator().nextInt(option.getValue().length)];
 					
 					// if the option value is greater than 0, add it
-					if (bcVal > 0) bc.put(option.getKey(), bcVal);
+					if (bcVal > 0) { 
+						bc.put(option.getKey(), bcVal);
+					}
 				} else { 
 					// generate user height & weight
 					int val = option.getValue()[0] + (int)(Math.random() * ((option.getValue()[1] - option.getValue()[0]) + 1));

@@ -76,11 +76,11 @@ public class GenerateUsers {
 			// check for overrides for defaults
 			String[] overrides = { RandomUserConstants.KEYSPACE_KEY, "userRowKey", "userCf", "hostIp", "clusterName", "numUsers", "numThreads", "singleTest" };
 			for (int i = 0; i < overrides.length; i++) {
-				if (properties.containsKey(overrides[i]) && overrides[i] == "singleTest") { 
+				if (properties.containsKey(overrides[i]) && overrides[i].equalsIgnoreCase("singletest")) {  
 					if (LOG.isInfoEnabled()) {
 						LOG.info("singleTest property detected");
 					}
-					if (properties.getProperty(overrides[i]).toLowerCase().equals("true")) { 
+					if (properties.getProperty(overrides[i]).equalsIgnoreCase("true")) { 
 						setNumUsers(1);
 						setNumThreads(1);
 						setSingleTest(true);
@@ -179,7 +179,9 @@ public class GenerateUsers {
 				KeyspaceDefinition keyspaceDef = cluster.describeKeyspace(getKeyspace());
 				boolean cfExists = false;
 				for (ColumnFamilyDefinition cfDef : keyspaceDef.getCfDefs()) {
-					if (cfDef.getName().equals(getUserCf())) cfExists = true;
+					if (cfDef.getName().equals(getUserCf())) {
+						cfExists = true;
+					}
 				}
 			
 				if (!cfExists) { 

@@ -1,6 +1,6 @@
 package com.wuchubuzai.random;
 
-public class RandomUserConstants {
+class RandomUserConstants {
 
 	public static final String DEFAULT_KEY = "default";
 	public static final String ID_KEY = "id";
