@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 
@@ -31,25 +32,25 @@ import org.slf4j.LoggerFactory;
  */
 public class GenerateUsers {
 
-	static final Logger log = LoggerFactory.getLogger(GenerateUsers.class);
+	private static final Logger LOG = LoggerFactory.getLogger(GenerateUsers.class);
 	
 	// override via properties file:  GenerateUsers.properties
-	static String keyspace  = "random";
-	static String userRowKey = "users";
-	static String userCf = "user";
-	static String hostIp = "127.0.0.1:9160";
-	static String clusterName = "cluster";
+	private static String keyspace  = "random";
+	private static String userRowKey = "users";
+	private static String userCf = "user";
+	private static String hostIp = "127.0.0.1:9160";
+	private static String clusterName = "cluster";
 	
 	// create 25,000 user entries
-	static int numUsers = 1000;
-	static int numThreads = 100;
+	private static int numUsers = 1000;
+	private static int numThreads = 100;
 	
-	static Cluster cluster;
-	static Random generator = new Random();
+	private static Cluster cluster;
+	private static Random generator = new Random();
 	
-	static boolean singleTest = false;
-	static HashMap<Integer, String> firstNames = new HashMap<Integer, String>();
-	static HashMap<Integer, String> lastNames = new HashMap<Integer, String>();
+	private static boolean singleTest = false;
+	private static Map<Integer, String> firstNames = new HashMap<Integer, String>();
+	private static Map<Integer, String> lastNames = new HashMap<Integer, String>();
 	
 	public static void main(String[] args) {
 
@@ -63,16 +64,22 @@ public class GenerateUsers {
 				properties.load(inputStream);
 				propertiesExist = true;
 			}
-		} catch (IOException e) {}
+		} catch (IOException e) {
+			LOG.error("IOException: " + e.getMessage());
+		}
 		
 		if (propertiesExist) { 
-			if (log.isInfoEnabled()) log.info("properties file found with " + properties.size()  + " properties detected");
+			if (LOG.isInfoEnabled()) {
+				LOG.info("properties file found with " + properties.size()  + " properties detected");
+			}
 
 			// check for overrides for defaults
-			String[] overrides = { "keyspace", "userRowKey", "userCf", "hostIp", "clusterName", "numUsers", "numThreads", "singleTest" };
+			String[] overrides = { RandomUserConstants.KEYSPACE_KEY, "userRowKey", "userCf", "hostIp", "clusterName", "numUsers", "numThreads", "singleTest" };
 			for (int i = 0; i < overrides.length; i++) {
 				if (properties.containsKey(overrides[i]) && overrides[i] == "singleTest") { 
-					if (log.isInfoEnabled()) log.info("singleTest property detected");
+					if (LOG.isInfoEnabled()) {
+						LOG.info("singleTest property detected");
+					}
 					if (properties.getProperty(overrides[i]).toLowerCase().equals("true")) { 
 						setNumUsers(1);
 						setNumThreads(1);
@@ -80,39 +87,55 @@ public class GenerateUsers {
 					}
 				} else { 
 					if (properties.containsKey(overrides[i])) { 
-						if (log.isInfoEnabled()) log.info(overrides[i] + " external property defined");
-						if (overrides[i].equals("keyspace")) {
-							if (log.isInfoEnabled()) log.info("override keyspace: " + properties.getProperty(overrides[i]));
+						if (LOG.isInfoEnabled()) {
+							LOG.info(overrides[i] + " external property defined");
+						}
+						if (overrides[i].equals(RandomUserConstants.KEYSPACE_KEY)) {
+							if (LOG.isInfoEnabled()) {
+								LOG.info("override keyspace: " + properties.getProperty(overrides[i]));
+							}
 							setKeyspace(properties.getProperty(overrides[i]));
 						}
 						
 						if (overrides[i].equals("userRowKey")) {
-							if (log.isInfoEnabled()) log.info("override userRowKey: " + properties.getProperty(overrides[i]));
+							if (LOG.isInfoEnabled()) {
+								LOG.info("override userRowKey: " + properties.getProperty(overrides[i]));
+							}
 							setUserRowKey(properties.getProperty(overrides[i]));
 						}
 						
 						if (overrides[i].equals("userCf")) {
-							if (log.isInfoEnabled()) log.info("override userCf: " + properties.getProperty(overrides[i]));
+							if (LOG.isInfoEnabled()) {
+								LOG.info("override userCf: " + properties.getProperty(overrides[i]));
+							}
 							setUserCf(properties.getProperty(overrides[i]));
 						}
 						
 						if (overrides[i].equals("hostIp")) {
-							if (log.isInfoEnabled()) log.info("override hostIp: " + properties.getProperty(overrides[i]));
+							if (LOG.isInfoEnabled()) {
+								LOG.info("override hostIp: " + properties.getProperty(overrides[i]));
+							}
 							setHostIp(properties.getProperty(overrides[i]));
 						}
 						
 						if (overrides[i].equals("clusterName")) {
-							if (log.isInfoEnabled()) log.info("override clusterName: " + properties.getProperty(overrides[i]));
+							if (LOG.isInfoEnabled()) {
+								LOG.info("override clusterName: " + properties.getProperty(overrides[i]));
+							}
 							setClusterName(properties.getProperty(overrides[i]));
 						}
 						
 						if (overrides[i].equals("numUsers")) {
-							if (log.isInfoEnabled()) log.info("override numUsers: " + properties.getProperty(overrides[i]));
+							if (LOG.isInfoEnabled()) {
+								LOG.info("override numUsers: " + properties.getProperty(overrides[i]));
+							}
 							setNumUsers(Integer.parseInt(properties.getProperty(overrides[i])));
 						}
 						
 						if (overrides[i].equals("numThreads")) {
-							if (log.isInfoEnabled()) log.info("override numThreads: " + properties.getProperty(overrides[i]));
+							if (LOG.isInfoEnabled()) {
+								LOG.info("override numThreads: " + properties.getProperty(overrides[i]));
+							}
 							setNumThreads(Integer.parseInt(properties.getProperty(overrides[i])));
 						}
 					}
@@ -134,10 +157,10 @@ public class GenerateUsers {
 				i++;
 			}
 		} catch (FileNotFoundException e) {
-			log.error(e.getMessage());
+			LOG.error(e.getMessage());
 			System.exit(-1);
 		} catch (IOException e) {
-			log.error(e.getMessage());
+			LOG.error(e.getMessage());
 			System.exit(-1);
 		}
 		
@@ -150,7 +173,7 @@ public class GenerateUsers {
 				if (cluster.describeKeyspace(getKeyspace()) == null) { 
 					cluster.addKeyspace(HFactory.createKeyspaceDefinition(getKeyspace()));
 				} else { 
-					log.info("keyspace: " + getKeyspace() + " exists");
+					LOG.info("keyspace: " + getKeyspace() + " exists");
 				}
 				
 				KeyspaceDefinition keyspaceDef = cluster.describeKeyspace(getKeyspace());
@@ -176,7 +199,7 @@ public class GenerateUsers {
 				}
 				
 			} catch (HectorException he) { 
-				log.error(he.getMessage());
+				LOG.error(he.getMessage());
 				System.exit(1);
 			}
 			
@@ -277,13 +300,33 @@ public class GenerateUsers {
 	}
 
 
-	public static HashMap<Integer, String> getFirstNames() {
+	public static Map<Integer, String> getFirstNames() {
 		return firstNames;
 	}
 
 
-	public static HashMap<Integer, String> getLastNames() {
+	public static Map<Integer, String> getLastNames() {
 		return lastNames;
+	}
+
+
+	public static Random getGenerator() {
+		return generator;
+	}
+
+
+	public static void setGenerator(Random generator) {
+		GenerateUsers.generator = generator;
+	}
+
+
+	public static Cluster getCluster() {
+		return cluster;
+	}
+
+
+	public static void setCluster(Cluster cluster) {
+		GenerateUsers.cluster = cluster;
 	}
 	
 	
